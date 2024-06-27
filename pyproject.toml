@@ -1,0 +1,98 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "pyvint"
+authors = [{name = "osoken"}]
+description = "A Python library for pure Python encoding and decoding of integers using Variable-Size Integer (VINT)."
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["vint", "variable-size integer", "integer"]
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = []
+dynamic = ["version"]
+
+[project.urls]
+Source = "https://github.com/osoken/pyvint"
+
+[tool.setuptools.package-data]
+pyvint = ["py.typed"]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "flake8",
+    "pyproject-flake8",
+    "pytest",
+    "mypy",
+    "tox",
+    "isort",
+    "pytest-cov",
+    "pytest-random-order",
+]
+docs = [
+    "sphinx",
+    "sphinx_rtd_theme",
+    "sphinx-autodoc-typehints",
+]
+
+[tool.pytest.ini_options]
+addopts = ["-sv", "--random-order", "--doctest-modules", "--cov=pyvint", "--cov-report=xml", "--cov-report=term-missing"]
+testpaths = ["tests", "src/pyvint"]
+filterwarnings = [
+    "error",
+]
+
+[tool.black]
+line-length = 120
+target-version = ["py310"]
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = "E203, E701"
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+plugins = []
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+skipsdist = True
+envlist = lint, py38, py39, py310, py311, py312
+
+[testenv]
+setenv =
+    VIRTUALENV_PIP = 24.1
+deps =
+    -e .[dev]
+commands =
+    pytest
+    mypy src/pyvint --strict
+    mypy tests --strict
+
+[testenv:lint]
+deps =
+    -e .[dev]
+commands =
+    black --check src/pyvint tests
+    isort --check-only src/pyvint tests
+    pflake8 src/pyvint tests
+"""
