@@ -95,4 +95,11 @@ commands =
     black --check src/pyvint tests
     isort --check-only src/pyvint tests
     pflake8 src/pyvint tests
+
+[testenv:docs]
+deps =
+    -e .[docs]
+commands =
+    sphinx-apidoc -o docs/ src/pyvint src/pyvint/core.py
+    sphinx-build -b html docs/ docs/_build
 """
