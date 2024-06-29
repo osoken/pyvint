@@ -1,4 +1,6 @@
 import math
+from io import BytesIO
+from typing import Tuple
 
 
 def _calc_vint_width(vint: bytes) -> int:
@@ -16,7 +18,7 @@ def _calc_vint_width(vint: bytes) -> int:
     """
     vint_width = 0
     for idx in range(len(vint)):
-        flg = vint[idx] & 0xFF
+        flg = vint[idx]
         if flg == 0:
             vint_width += 8
         else:
@@ -51,3 +53,56 @@ def decode(vint: bytes) -> int:
     if len(vint) != vint_width + 1:
         raise ValueError("Invalid VINT.")
     return int.from_bytes(vint, byteorder="big") - (0x01 << (7 * vint_width + 7))
+
+
+def _calc_vint_width_and_return_last_bytes_from_stream(stream: BytesIO) -> Tuple[int, bytes]:
+    r"""
+    >>> _calc_vint_width_and_return_last_bytes_from_stream(BytesIO(b'\x82'))
+    (0, b'\x82')
+    >>> _calc_vint_width_and_return_last_bytes_from_stream(BytesIO(b'\x40\x02'))
+    (1, b'@')
+    >>> _calc_vint_width_and_return_last_bytes_from_stream(BytesIO(b'\x20\x00\x02'))
+    (2, b' ')
+    >>> _calc_vint_width_and_return_last_bytes_from_stream(BytesIO(b'\x10\x00\x00\x02'))
+    (3, b'\x10')
+    >>> _calc_vint_width_and_return_last_bytes_from_stream(BytesIO(b'\x00\x04'))
+    (13, b'\x04')
+    """
+    vint_width = 0
+    byte = stream.read(1)
+    while byte:
+        flg = byte[0]
+        if flg == 0:
+            vint_width += 8
+        else:
+            vint_width += 7 - math.floor(math.log2(flg))
+            break
+        byte = stream.read(1)
+    return vint_width, byte
+
+
+def decode_stream(stream: BytesIO) -> int:
+    r"""
+    Decode a Variable-Size Integer (VINT) from a stream.
+
+    Args:
+        stream (IOBase[bytes]): The stream to read the VINT from.
+
+    Returns:
+        The decoded integer.
+
+    Examples:
+        >>> from io import BytesIO
+        >>> stream = BytesIO(b'\x82')
+        >>> decode_stream(stream)
+        2
+        >>> stream = BytesIO(b'\x40\x02\x00')
+        >>> decode_stream(stream)
+        2
+        >>> stream.read()
+        b'\x00'
+    """
+    vint_width, head_byte = _calc_vint_width_and_return_last_bytes_from_stream(stream)
+    head_byte = (head_byte[0] & ((0x01 << (7 - (vint_width % 8))) - 1)).to_bytes(1, byteorder="big")
+    vint = head_byte + stream.read(vint_width)
+    return int.from_bytes(vint, byteorder="big")
