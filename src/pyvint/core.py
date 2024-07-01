@@ -113,10 +113,13 @@ def decode_stream(stream: BytesIO) -> int:
 def encode(value: int, octet_length: Optional[int] = None) -> bytes:
     r"""
     Encode an integer to a Variable-Size Integer (VINT).
+    You can specify the octet length of the VINT. If you don't specify it, the function will calculate it automatically.
     This function doesn't support negative integers, which causes a ValueError to be raised.
+    You will get a ValueError if the octet length is less than the calculated one.
 
     Args:
         value (int): The integer to encode.
+        octet_length (Optional[int]): The octet length of the VINT. Defaults to None.
 
     Returns:
         The bytes representing the VINT.
@@ -126,15 +129,23 @@ def encode(value: int, octet_length: Optional[int] = None) -> bytes:
         b'\x82'
         >>> encode(89)
         b'\xd9'
+        >>> encode(0)
+        b'\x80'
+        >>> encode(0, 2)
+        b'@\x00'
         >>> encode(172351395)
         b'\x1aE\xdf\xa3'
+        >>> encode(2, 2)
+        b'@\x02'
     """
-    b128_length = math.floor(math.log(value, 128)) + 1
+    if value < 0:
+        raise ValueError("The value must be non-negative.")
+    b128_length = math.floor(math.log(value, 128)) + 1 if value > 0 else 1
     if octet_length is None:
         octet_length_ = b128_length
     else:
         if octet_length < b128_length:
-            raise ValueError("The octet_length is too short.")
+            raise ValueError("Invalid octet length.")
         octet_length_ = octet_length
     buf = bytearray(value.to_bytes(octet_length_, byteorder="big"))
     buf[(octet_length_ - 1) // 8] |= 0x80 >> ((octet_length_ + 7) % 8)

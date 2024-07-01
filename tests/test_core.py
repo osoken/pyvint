@@ -94,3 +94,19 @@ def test_encode_default_octet_lwngth(value: int, expected: bytes) -> None:
 )
 def test_encode_custom_octet_length(value: int, octet_length: int, expected: bytes) -> None:
     assert core.encode(value, octet_length=octet_length) == expected
+
+
+def test_encode_invalid_octet_length() -> None:
+    with pytest.raises(ValueError, match="Invalid octet length."):
+        core.encode(2, octet_length=0)
+    with pytest.raises(ValueError, match="Invalid octet length."):
+        core.encode(2, octet_length=-1)
+    with pytest.raises(ValueError, match="Invalid octet length."):
+        core.encode(27438, octet_length=1)
+
+
+def test_encode_raises_value_error_if_the_value_is_negative() -> None:
+    with pytest.raises(ValueError, match="The value must be non-negative."):
+        core.encode(-1)
+    with pytest.raises(ValueError, match="The value must be non-negative."):
+        core.encode(-2, octet_length=1)
