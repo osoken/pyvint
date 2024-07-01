@@ -69,6 +69,9 @@ def test_decode_stream_invalid_too_short() -> None:
         (2, b"\x82"),
         (89, b"\xd9"),
         (172351395, b"\x1a\x45\xdf\xa3"),
+        (1231434398764213200324278, b"\x00\x11\x04\xc4\x31\x49\x08\xfb\xb7\xd9\x86\xb6"),
+        (127, b"\xff"),
+        (128, b"\x40\x80"),
     ),
 )
 def test_encode_default_vint_width(value: int, expected: bytes) -> None:
