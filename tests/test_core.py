@@ -25,6 +25,16 @@ def test_decode(vint: bytes, expected: int) -> None:
     assert core.decode(vint) == expected
 
 
+def test_decode_invalid_too_short() -> None:
+    with pytest.raises(ValueError, match="Invalid VINT."):
+        core.decode(b"\x01")
+
+
+def test_decode_invalid_too_long() -> None:
+    with pytest.raises(ValueError, match="Invalid VINT."):
+        core.decode(b"\x80\x01")
+
+
 @pytest.mark.parametrize(
     ("vint", "expected", "remainder"),
     (
