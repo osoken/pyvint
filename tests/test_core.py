@@ -56,3 +56,8 @@ def test_decode_stream(vint: bytes, expected: int, remainder: bytes) -> None:
     actual = core.decode_stream(stream=stream)
     assert actual == expected
     assert stream.read() == remainder
+
+
+def test_decode_stream_invalid_too_short() -> None:
+    with pytest.raises(ValueError, match="Invalid VINT."):
+        core.decode_stream(BytesIO(b"\x01"))
