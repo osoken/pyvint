@@ -104,5 +104,5 @@ def decode_stream(stream: BytesIO) -> int:
     """
     vint_width, head_byte = _calc_vint_width_and_return_last_bytes_from_stream(stream)
     head_byte = (head_byte[0] & ((0x01 << (7 - (vint_width % 8))) - 1)).to_bytes(1, byteorder="big")
-    vint = head_byte + stream.read(vint_width)
+    vint = head_byte + stream.read(vint_width - vint_width // 8)
     return int.from_bytes(vint, byteorder="big")
