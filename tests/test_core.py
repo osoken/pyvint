@@ -61,3 +61,15 @@ def test_decode_stream(vint: bytes, expected: int, remainder: bytes) -> None:
 def test_decode_stream_invalid_too_short() -> None:
     with pytest.raises(ValueError, match="Invalid VINT."):
         core.decode_stream(BytesIO(b"\x01"))
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    (
+        (2, b"\x82"),
+        (89, b"\xd9"),
+        (172351395, b"\x1a\x45\xdf\xa3"),
+    ),
+)
+def test_encode_default_vint_width(value: int, expected: bytes) -> None:
+    assert core.encode(value) == expected

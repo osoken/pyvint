@@ -108,3 +108,28 @@ def decode_stream(stream: BytesIO) -> int:
     if len(vint) != vint_width + 1 - vint_width // 8:
         raise ValueError("Invalid VINT.")
     return int.from_bytes(vint, byteorder="big")
+
+
+def encode(value: int) -> bytes:
+    r"""
+    Encode an integer to a Variable-Size Integer (VINT).
+    This function doesn't support negative integers, which causes a ValueError to be raised.
+
+    Args:
+        value (int): The integer to encode.
+
+    Returns:
+        The bytes representing the VINT.
+
+    Examples:
+        >>> encode(2)
+        b'\x82'
+        >>> encode(89)
+        b'\xd9'
+        >>> encode(172351395)
+        b'\x1aE\xdf\xa3'
+    """
+    b128_length = math.floor(math.log(value, 128)) + 1
+    buf = bytearray(value.to_bytes(b128_length, byteorder="big"))
+    buf[b128_length // 8] |= 0x80 >> (b128_length % 8 - 1)
+    return bytes(buf)
