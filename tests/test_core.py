@@ -74,5 +74,23 @@ def test_decode_stream_invalid_too_short() -> None:
         (128, b"\x40\x80"),
     ),
 )
-def test_encode_default_vint_width(value: int, expected: bytes) -> None:
+def test_encode_default_octet_lwngth(value: int, expected: bytes) -> None:
     assert core.encode(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "octet_length", "expected"),
+    (
+        (2, 1, b"\x82"),
+        (3, 2, b"\x40\x03"),
+        (5, 3, b"\x20\x00\x05"),
+        (8, 4, b"\x10\x00\x00\x08"),
+        (13, 5, b"\x08\x00\x00\x00\x0d"),
+        (21, 6, b"\x04\x00\x00\x00\x00\x15"),
+        (34, 7, b"\x02\x00\x00\x00\x00\x00\x22"),
+        (55, 8, b"\x01\x00\x00\x00\x00\x00\x00\x37"),
+        (89, 9, b"\x00\x80\x00\x00\x00\x00\x00\x00\x59"),
+    ),
+)
+def test_encode_custom_octet_length(value: int, octet_length: int, expected: bytes) -> None:
+    assert core.encode(value, octet_length=octet_length) == expected

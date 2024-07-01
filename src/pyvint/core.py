@@ -1,6 +1,6 @@
 import math
 from io import BytesIO
-from typing import Tuple
+from typing import Optional, Tuple
 
 
 def _calc_vint_width(vint: bytes) -> int:
@@ -110,7 +110,7 @@ def decode_stream(stream: BytesIO) -> int:
     return int.from_bytes(vint, byteorder="big")
 
 
-def encode(value: int) -> bytes:
+def encode(value: int, octet_length: Optional[int] = None) -> bytes:
     r"""
     Encode an integer to a Variable-Size Integer (VINT).
     This function doesn't support negative integers, which causes a ValueError to be raised.
@@ -130,6 +130,12 @@ def encode(value: int) -> bytes:
         b'\x1aE\xdf\xa3'
     """
     b128_length = math.floor(math.log(value, 128)) + 1
-    buf = bytearray(value.to_bytes(b128_length, byteorder="big"))
-    buf[b128_length // 8] |= 0x80 >> (b128_length % 8 - 1)
+    if octet_length is None:
+        octet_length_ = b128_length
+    else:
+        if octet_length < b128_length:
+            raise ValueError("The octet_length is too short.")
+        octet_length_ = octet_length
+    buf = bytearray(value.to_bytes(octet_length_, byteorder="big"))
+    buf[(octet_length_ - 1) // 8] |= 0x80 >> ((octet_length_ + 7) % 8)
     return bytes(buf)
