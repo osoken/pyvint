@@ -102,4 +102,16 @@ deps =
 commands =
     sphinx-apidoc -o docs/ src/pyvint src/pyvint/core.py
     sphinx-build -b html docs/ docs/_build
+
+[testenv:build-release]
+passenv = TWINE_PASSWORD
+setenv = TWINE_USERNAME = __token__
+allowlist_externals = rm
+deps =
+    build
+    twine
+commands =
+    rm -fr {toxinidir}/dist
+    python -m build
+    python -m twine upload {toxinidir}/dist/*
 """
