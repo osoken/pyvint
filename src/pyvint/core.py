@@ -3,6 +3,34 @@ from io import BytesIO
 from typing import Optional, Tuple
 
 
+def _count_leading_zeros_in_char(char_value: int) -> int:
+    r"""
+    >>> _count_leading_zeros_in_char(0b00000000)
+    8
+    >>> _count_leading_zeros_in_char(0b00000001)
+    7
+    >>> _count_leading_zeros_in_char(0b10000000)
+    0
+    >>> _count_leading_zeros_in_char(0b11111111)
+    0
+    >>> _count_leading_zeros_in_char(0b00100111)
+    2
+    """
+    if char_value == 0:
+        return 8
+    ans = 0
+    val = char_value
+    if val & 0b11110000 == 0:
+        ans += 4
+        val <<= 4
+    if val & 0b11000000 == 0:
+        ans += 2
+        val <<= 2
+    if val & 0b10000000 == 0:
+        ans += 1
+    return ans
+
+
 def _calc_vint_width(vint: bytes) -> int:
     r"""
     >>> _calc_vint_width(b'\x82')
@@ -52,7 +80,22 @@ def decode(vint: bytes) -> int:
     vint_width = _calc_vint_width(vint)
     if len(vint) != vint_width + 1:
         raise ValueError("Invalid VINT.")
-    return int.from_bytes(vint, byteorder="big") - (0x01 << (7 * vint_width + 7))
+    return _decode_impl(vint)
+
+
+def _decode_impl(vint: bytes) -> int:
+    r"""
+    >>> _decode_impl(b'\x82')
+    2
+    >>> _decode_impl(b'\x10\x00\x00\x02')
+    2
+    >>> _decode_impl(b'\xff')
+    127
+    """
+    octet_length = len(vint)
+    buf = bytearray(vint)
+    buf[(octet_length - 1) // 8] &= (0x80 >> ((octet_length + 7) % 8)) - 1
+    return int.from_bytes(buf, byteorder="big")
 
 
 def _calc_vint_width_and_return_last_bytes_from_stream(stream: BytesIO) -> Tuple[int, bytes]:
@@ -102,12 +145,20 @@ def decode_stream(stream: BytesIO) -> int:
         >>> stream.read()
         b'\x00'
     """
-    vint_width, head_byte = _calc_vint_width_and_return_last_bytes_from_stream(stream)
-    head_byte = (head_byte[0] & ((0x01 << (7 - (vint_width % 8))) - 1)).to_bytes(1, byteorder="big")
-    vint = head_byte + stream.read(vint_width - vint_width // 8)
-    if len(vint) != vint_width + 1 - vint_width // 8:
+    octet_length = 0
+    while True:
+        b = stream.read(1)
+        if not b:
+            raise ValueError("Invalid VINT.")
+        leading_zeros = _count_leading_zeros_in_char(b[0])
+        octet_length += leading_zeros
+        if leading_zeros < 8:
+            break
+    remaining = octet_length - octet_length // 8
+    remaining_bytes = stream.read(remaining)
+    if len(remaining_bytes) != remaining:
         raise ValueError("Invalid VINT.")
-    return int.from_bytes(vint, byteorder="big")
+    return _decode_impl(b"\x00" * (octet_length // 8) + b + remaining_bytes)
 
 
 def encode(value: int, octet_length: Optional[int] = None) -> bytes:
