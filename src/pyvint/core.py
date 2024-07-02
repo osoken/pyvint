@@ -100,6 +100,30 @@ def decode_stream(stream: BytesIO) -> int:
         >>> stream.read()
         b'\x00'
     """
+    return _decode_impl(read_vint(stream))
+
+
+def read_vint(stream: BytesIO) -> bytes:
+    r"""
+    Read a Variable-Size Integer (VINT) from a stream.
+
+    Args:
+        stream (IOBase[bytes]): The stream to read the VINT from.
+
+    Returns:
+        The VINT bytes.
+
+    Examples:
+        >>> from io import BytesIO
+        >>> stream = BytesIO(b'\x82')
+        >>> read_vint(stream)
+        b'\x82'
+        >>> stream = BytesIO(b'\x40\x02\x00')
+        >>> read_vint(stream)
+        b'@\x02'
+        >>> stream.read()
+        b'\x00'
+    """
     octet_length = 0
     while True:
         b = stream.read(1)
@@ -113,7 +137,7 @@ def decode_stream(stream: BytesIO) -> int:
     remaining_bytes = stream.read(remaining)
     if len(remaining_bytes) != remaining:
         raise ValueError("Invalid VINT.")
-    return _decode_impl(b"\x00" * (octet_length // 8) + b + remaining_bytes)
+    return b"\x00" * (octet_length // 8) + b + remaining_bytes
 
 
 def encode(value: int, octet_length: Optional[int] = None) -> bytes:
