@@ -31,30 +31,6 @@ def _count_leading_zeros_in_char(char_value: int) -> int:
     return ans
 
 
-def _calc_vint_width(vint: bytes) -> int:
-    r"""
-    >>> _calc_vint_width(b'\x82')
-    0
-    >>> _calc_vint_width(b'\x40\x02')
-    1
-    >>> _calc_vint_width(b'\x20\x00\x02')
-    2
-    >>> _calc_vint_width(b'\x10\x00\x00\x02')
-    3
-    >>> _calc_vint_width(b'\x00\x04')
-    13
-    """
-    vint_width = 0
-    for idx in range(len(vint)):
-        flg = vint[idx]
-        if flg == 0:
-            vint_width += 8
-        else:
-            vint_width += 7 - math.floor(math.log2(flg))
-            break
-    return vint_width
-
-
 def decode(vint: bytes) -> int:
     r"""
     Decode a Variable-Size Integer (VINT).
@@ -77,8 +53,13 @@ def decode(vint: bytes) -> int:
          ...
         ValueError: Invalid VINT.
     """
-    vint_width = _calc_vint_width(vint)
-    if len(vint) != vint_width + 1:
+    octet_length = 0
+    for b in vint:
+        leading_zeros = _count_leading_zeros_in_char(b)
+        octet_length += leading_zeros
+        if leading_zeros < 8:
+            break
+    if len(vint) != octet_length + 1:
         raise ValueError("Invalid VINT.")
     return _decode_impl(vint)
 

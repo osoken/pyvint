@@ -28,6 +28,8 @@ def test_decode(vint: bytes, expected: int) -> None:
 def test_decode_invalid_too_short() -> None:
     with pytest.raises(ValueError, match="Invalid VINT."):
         core.decode(b"\x01")
+    with pytest.raises(ValueError, match="Invalid VINT."):
+        core.decode(b"")
 
 
 def test_decode_invalid_too_long() -> None:
@@ -61,6 +63,8 @@ def test_decode_stream(vint: bytes, expected: int, remainder: bytes) -> None:
 def test_decode_stream_invalid_too_short() -> None:
     with pytest.raises(ValueError, match="Invalid VINT."):
         core.decode_stream(BytesIO(b"\x01"))
+    with pytest.raises(ValueError, match="Invalid VINT."):
+        core.decode_stream(BytesIO(b""))
 
 
 @pytest.mark.parametrize(
