@@ -17,3 +17,7 @@ def test_pyvint_exports_decode_stream() -> None:
 
 def test_pyvint_exports_encode() -> None:
     assert pyvint.encode == pyvint.core.encode
+
+
+def test_pyvint_exports_read_vint() -> None:
+    assert pyvint.read_vint == pyvint.core.read_vint
