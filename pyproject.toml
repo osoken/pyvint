@@ -26,6 +26,7 @@ dynamic = ["version"]
 
 [project.urls]
 Source = "https://github.com/osoken/pyvint"
+Documentation = "https://osoken.github.io/pyvint/"
 
 [tool.setuptools.package-data]
 pyvint = ["py.typed"]
@@ -102,6 +103,12 @@ deps =
     -e .[docs]
 commands =
     mkdocs build
+
+[testenv:docs-release]
+deps =
+    -e .[docs]
+commands =
+    mkdocs gh-deploy
 
 [testenv:build-release]
 passenv = TWINE_PASSWORD
