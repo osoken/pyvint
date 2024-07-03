@@ -43,9 +43,10 @@ dev = [
     "pytest-random-order",
 ]
 docs = [
-    "sphinx",
-    "sphinx_rtd_theme",
-    "sphinx-autodoc-typehints",
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocstrings[python]",
+    "mkdocs-include-markdown-plugin",
 ]
 
 [tool.pytest.ini_options]
@@ -100,8 +101,7 @@ commands =
 deps =
     -e .[docs]
 commands =
-    sphinx-apidoc -o docs/ src/pyvint src/pyvint/core.py
-    sphinx-build -b html docs/ docs/_build
+    mkdocs build
 
 [testenv:build-release]
 passenv = TWINE_PASSWORD
