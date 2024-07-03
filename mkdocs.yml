@@ -12,6 +12,14 @@ plugins:
       default_handler: python
   - include-markdown
 
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
 
 theme:
   name: "material"
@@ -28,3 +36,5 @@ theme:
         icon: material/toggle-switch
         name: Switch to light mode
       primary: "indigo"
+  features:
+    - content.code.copy
